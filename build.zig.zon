@@ -1,0 +1,12 @@
+.{
+    .name = .binius_sorted_sequence,
+    .version = "0.1.0",
+    .fingerprint = 0x91d9b8e3136ec333,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .zig_stark = .{
+            .path = "zig-stark",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src", "demos" },
+}

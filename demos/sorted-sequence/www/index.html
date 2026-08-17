@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binius STARK: Sorted Sequence Demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Binius STARK: Sorted Sequence</h1>
+      <p>A strictly increasing sequence of 4-bit values (u4) is proven in zero knowledge.</p>
+    </header>
+
+    <section class="controls">
+      <h2>Input</h2>
+      <label>
+        Sequence (n+1 values, 0-15, strictly increasing):
+        <input type="text" id="seqInput" placeholder="0,5,10,13" />
+      </label>
+      <button id="proveBtn">Prove</button>
+      <button id="verifyBtn">Verify</button>
+      <button id="clearBtn">Clear</button>
+    </section>
+
+    <section class="results">
+      <h2>Results</h2>
+      <pre id="output">Enter a sequence and click "Prove".</pre>
+    </section>
+
+    <footer>
+      <p>Zig Binius STARK demos. See <a href="https://github.com/6x7/zig-stark">zig-stark</a>.</p>
+    </footer>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

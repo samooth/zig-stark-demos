@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binius STARK: GF(256) Multiplication Table Demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Binius STARK: GF(256) Multiplication Table</h1>
+      <p>Prove that for a batch of inputs, c = a &#8855; b in GF(256) (Wiedemann tower field).</p>
+    </header>
+
+    <section class="controls">
+      <h2>Input (4-bit values, 0-15)</h2>
+      <label>
+        a values (comma-separated, power-of-2 count):
+        <input type="text" id="aInput" placeholder="3, 5, 7, 9" />
+      </label>
+      <label>
+        b values (same count as a):
+        <input type="text" id="bInput" placeholder="2, 4, 6, 8" />
+      </label>
+      <button id="genBtn">Generate &amp; Prove</button>
+      <button id="verifyBtn">Verify</button>
+      <button id="clearBtn">Clear</button>
+    </section>
+
+    <section class="table-section">
+      <h2>Multiplication Table (GF(256))</h2>
+      <div id="tableContainer">
+        <table id="mulTable">
+          <thead><tr><th>a &times; b</th><th>Integer</th><th>GF(256)</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="results">
+      <h2>Results</h2>
+      <pre id="output">Enter values and click "Generate &amp; Prove".</pre>
+    </section>
+
+    <footer>
+      <p>Zig Binius STARK demos. See <a href="https://github.com/6x7/zig-stark">zig-stark</a>.</p>
+    </footer>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
