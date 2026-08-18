@@ -1,6 +1,7 @@
 const std = @import("std");
 
-const wasm_exports = [_][]const u8{ "zs_version", "zs_prove", "zs_verify", "zs_free", "zs_debug_ptr", "zs_debug_len", "zs_self_test", "zs_debug_columns", "zs_test_proof_serdeser", "zs_test_ser_basic" };
+const wasm_exports_std = [_][]const u8{ "zs_version", "zs_prove", "zs_verify", "zs_free" };
+const wasm_exports_aes = [_][]const u8{ "zs_version", "zs_prove", "zs_verify", "zs_free", "zs_debug_ptr", "zs_debug_len", "zs_self_test", "zs_debug_columns", "zs_test_proof_serdeser", "zs_test_ser_basic" };
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -103,7 +104,7 @@ pub fn build(b: *std.Build) void {
             .root_module = wasm_mod,
         });
         wasm_exe.entry = .disabled;
-        wasm_exe.root_module.export_symbol_names = &wasm_exports;
+        wasm_exe.root_module.export_symbol_names = &wasm_exports_std;
         const install_wasm = b.addInstallArtifact(wasm_exe, .{ .dest_sub_path = "sorted_seq_wasm.wasm" });
         const wasm_src = b.pathJoin(&[_][]const u8{ b.exe_dir, "sorted_seq_wasm.wasm" });
         const copy = b.addSystemCommand(&[_][]const u8{ "cp", wasm_src, "demos/sorted-sequence/www/binius_wasm.wasm" });
@@ -132,7 +133,7 @@ pub fn build(b: *std.Build) void {
             .root_module = wasm_mod,
         });
         wasm_exe.entry = .disabled;
-        wasm_exe.root_module.export_symbol_names = &wasm_exports;
+        wasm_exe.root_module.export_symbol_names = &wasm_exports_std;
         const install_wasm = b.addInstallArtifact(wasm_exe, .{ .dest_sub_path = "gf_mul_table_wasm.wasm" });
         const wasm_src = b.pathJoin(&[_][]const u8{ b.exe_dir, "gf_mul_table_wasm.wasm" });
         const copy = b.addSystemCommand(&[_][]const u8{ "cp", wasm_src, "demos/gf-mul-table/www/binius_wasm.wasm" });
@@ -161,7 +162,7 @@ pub fn build(b: *std.Build) void {
             .root_module = wasm_mod,
         });
         wasm_exe.entry = .disabled;
-        wasm_exe.root_module.export_symbol_names = &wasm_exports;
+        wasm_exe.root_module.export_symbol_names = &wasm_exports_aes;
         const install_wasm = b.addInstallArtifact(wasm_exe, .{ .dest_sub_path = "aes_sbox_wasm.wasm" });
         const wasm_src = b.pathJoin(&[_][]const u8{ b.exe_dir, "aes_sbox_wasm.wasm" });
         const copy = b.addSystemCommand(&[_][]const u8{ "cp", wasm_src, "demos/aes-sbox/www/binius_wasm.wasm" });

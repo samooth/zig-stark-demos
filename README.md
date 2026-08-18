@@ -1,14 +1,16 @@
 # zig-stark-demos
 
-Demo applications built on top of [zig-stark](https://github.com/11001010/zig-stark) (commit `c119a01e`), showcasing browser-based STARK proofs with the Binius zero-check prover over binary tower fields.
+Demo applications built on top of [zig-stark](https://github.com/samooth/zig-stark) (commit `c119a01e`), showcasing browser-based STARK proofs with the Binius zero-check prover over binary tower fields.
 
 ## Project Layout
 
 | Path | Description |
 |------|-------------|
 | `build.zig` / `build.zig.zon` | Build system (native CLI + WASM targets, zig-stark dependency, fmt check) |
+| `demo.sh` | Convenience script for building and running demos |
 | `demos/sorted-sequence/` | Sorted Sequence Prover demo (26 cols, 34 constraints, 2 pins) |
 | `demos/gf-mul-table/` | GF(256) Multiplication Table demo (15 cols, 19 constraints, 3 pins) |
+| `demos/aes-sbox/` | AES S-box Prover demo (116 cols, 148 constraints, 2 pins) |
 | `demos/*/src/circuit.zig` | Circuit definition with Binius gadgets |
 | `demos/*/src/main.zig` | Native CLI binary — prove/verify/tamper-test runner |
 | `demos/*/src/wasm_capi.zig` | WASM C-ABI exports (`zs_prove`, `zs_verify`, `zs_free`) |
@@ -52,6 +54,24 @@ The circuit composes three `RangeCheck(4)` gadgets (for a, b, c) plus a degree-2
 **Prove time:** ~48–172 ms (native), ~1–4 s (WASM)  
 **Verify time:** ~6–13 ms (native), ~45–55 ms (WASM)
 
+### 3. AES S-box Prover
+**`demos/aes-sbox/`**
+
+Users input 16 values (4 per S-box × 4 points); the app proves that each input `x` maps to AES output `S(x)` (inversion + affine transform in GF(256)), using a Binius STARK over `Gf256`/`Gf2_128` with `CommittedMlePcs`.
+
+The circuit composes 4 parallel `AES-Box(8)` gadgets (inversion + affine transform), each with two boundary pins (input value at point 0, output value at point 0) and cross-gadget linking to ensure all S-boxes use the same inversion method.
+
+**Circuit summary:**
+- 116 columns (4 × AES-Box(8) = 29 cols each)
+- 148 constraints (4 × AES-Box(8) = 37 constraints each)
+- 2 pins (input value of S-box 0 at point 0, output value of S-box 0 at point 0)
+- Field: `Gf256` base, `Gf2_128` extension (binary tower field)
+- AES S-box: `S(x) = Aff(AES.inv(x))` where `AES.inv(x)` is field inversion in GF(256) using Wiedemann tower basis
+
+**Proof size:** ~47–59 KB (k=2, 4 points × 4 S-boxes)  
+**Prove time:** ~61–303 ms (native), ~7–32 s (WASM)  
+**Verify time:** ~17–31 ms (native), ~0.5–0.7 s (WASM)
+
 ## Building
 
 ### Native binaries (both demos)
@@ -76,9 +96,18 @@ This compiles the WASM C-ABI modules with `ReleaseSmall` optimization (required 
 ```sh
 cd demos/sorted-sequence/www && npx serve .   # http://localhost:3000
 cd demos/gf-mul-table/www && npx serve .      # http://localhost:3001
+cd demos/aes-sbox/www && npx serve .          # http://localhost:3002
 ```
 
 Open in browser to interact with the demos.
+
+## Quick Start
+
+```sh
+./demo.sh all          # Build all native binaries and run all demos + tests
+./demo.sh test         # Run Node.js WASM tests
+./demo.sh www          # Build all WASM + copy to www/
+```
 
 ## Verification Commands
 
@@ -89,18 +118,38 @@ zig build www          # Build WASM + copy to www/
 zig build fmt          # Format check (zig fmt --check)
 ```
 
+Or use the helper script:
+
+```sh
+./demo.sh all          # Build and run all demos + tests
+./demo.sh test         # Run Node.js WASM tests only
+```
+
+### Native binaries
+```sh
+zig build
+./zig-out/bin/sorted_seq
+./zig-out/bin/gf_mul_table
+./zig-out/bin/aes_sbox
+```
+
 ### Node.js WASM tests (no browser required)
 
 ```sh
 node test_wasm.js
 ```
 
-This loads both WASM modules via WebAssembly.instantiate, generates witnesses in JavaScript, calls `zs_prove`/`zs_verify`, and runs prove/verify/tamper tests for both demos.
-
 ## Dependencies
 
 - **zig-stark** — referenced via local path `zig-stark/` → `/tmp/zig-stark` (commit `c119a01e`)
-- **Zig** — 0.16.0-dev.2535+b5bd49460 (or compatible)
+- **Zig** — >= 0.16.0
+
+## References
+
+- [Binius STARK Documentation](https://github.com/samooth/zig-stark)
+- [Binary Tower Fields](https://github.com/samooth/zig-stark/tree/main/docs)
+- [Range Check Gadget](https://github.com/samooth/zig-stark/tree/main/src/binius/gadgets/rangecheck.zig)
+- [Compare Gadget](https://github.com/samooth/zig-stark/tree/main/src/binius/gadgets/compare.zig)
 
 ## Notes
 
