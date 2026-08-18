@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const wasm_exports = [_][]const u8{ "zs_version", "zs_prove", "zs_verify", "zs_free" };
+const wasm_exports = [_][]const u8{ "zs_version", "zs_prove", "zs_verify", "zs_free", "zs_debug_ptr", "zs_debug_len", "zs_self_test", "zs_debug_columns", "zs_test_proof_serdeser", "zs_test_ser_basic" };
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -56,9 +56,32 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(gm_exe);
 
-    // --- WASM for both demos ---
+    // --- Demo 3: aes-sbox ---
+    const as_circuit_mod = b.addModule("circuit", .{
+        .root_source_file = b.path("demos/aes-sbox/src/circuit.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    as_circuit_mod.addImport("zig-stark", zig_stark.module("zig-stark"));
+
+    const as_exe = b.addExecutable(.{
+        .name = "aes_sbox",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("demos/aes-sbox/src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "circuit", .module = as_circuit_mod },
+                .{ .name = "zig-stark", .module = zig_stark.module("zig-stark") },
+            },
+        }),
+    });
+    b.installArtifact(as_exe);
+
+    // --- WASM for all demos ---
     var ss_wasm_step: *std.Build.Step = undefined;
     var gm_wasm_step: *std.Build.Step = undefined;
+    var as_wasm_step: *std.Build.Step = undefined;
 
     // sorted_seq WASM
     {
@@ -118,13 +141,44 @@ pub fn build(b: *std.Build) void {
         gm_wasm_step.dependOn(&copy.step);
     }
 
+    // aes_sbox WASM
+    {
+        const wasm_circuit_mod = b.addModule("circuit", .{
+            .root_source_file = b.path("demos/aes-sbox/src/circuit.zig"),
+            .target = wasm_target,
+            .optimize = wasm_optimize,
+        });
+        wasm_circuit_mod.addImport("zig-stark", zig_stark_wasm.module("zig-stark"));
+        const wasm_mod = b.createModule(.{
+            .root_source_file = b.path("demos/aes-sbox/src/wasm_capi.zig"),
+            .target = wasm_target,
+            .optimize = wasm_optimize,
+        });
+        wasm_mod.addImport("zig-stark", zig_stark_wasm.module("zig-stark"));
+        wasm_mod.addImport("circuit", wasm_circuit_mod);
+        const wasm_exe = b.addExecutable(.{
+            .name = "aes_sbox_wasm",
+            .root_module = wasm_mod,
+        });
+        wasm_exe.entry = .disabled;
+        wasm_exe.root_module.export_symbol_names = &wasm_exports;
+        const install_wasm = b.addInstallArtifact(wasm_exe, .{ .dest_sub_path = "aes_sbox_wasm.wasm" });
+        const wasm_src = b.pathJoin(&[_][]const u8{ b.exe_dir, "aes_sbox_wasm.wasm" });
+        const copy = b.addSystemCommand(&[_][]const u8{ "cp", wasm_src, "demos/aes-sbox/www/binius_wasm.wasm" });
+        copy.step.dependOn(&install_wasm.step);
+        as_wasm_step = b.step("aes_sbox-wasm", "Build aes_sbox WASM");
+        as_wasm_step.dependOn(&copy.step);
+    }
+
     const wasm_all = b.step("wasm", "Build all WASM modules");
     wasm_all.dependOn(ss_wasm_step);
     wasm_all.dependOn(gm_wasm_step);
+    wasm_all.dependOn(as_wasm_step);
 
     const www_all = b.step("www", "Build all WASM + copy to www/");
     www_all.dependOn(ss_wasm_step);
     www_all.dependOn(gm_wasm_step);
+    www_all.dependOn(as_wasm_step);
 
     const fmt_step = b.step("fmt", "Check code formatting (zig fmt --check)");
     const fmt = b.addFmt(.{ .paths = &.{ "demos", "build.zig", "build.zig.zon" }, .check = true });
