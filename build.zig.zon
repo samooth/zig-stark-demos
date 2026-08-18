@@ -5,7 +5,8 @@
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .zig_stark = .{
-            .path = "zig-stark",
+            .url = "https://github.com/samooth/zig-stark/archive/refs/heads/main.tar.gz",
+            .hash = "zig_stark-0.2.0-bax4hZDVGwB2mPEb4sq4PT5I9mUxdApV4MK4PZcgrjyo",
         },
     },
     .paths = .{ "build.zig", "build.zig.zon", "src", "demos" },
